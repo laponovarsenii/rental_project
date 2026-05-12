@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.db import transaction
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,11 +23,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Booking.objects.filter(
-            tenant=user
-        ) | Booking.objects.filter(
-            listing__owner=user
-        ).order_by('-created_at')
+        return Booking.objects.filter(tenant=user) | Booking.objects.filter(listing__owner=user).order_by('-created_at')
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -48,7 +45,9 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
         return {'request': self.request}
 
     def destroy(self, request, *args, **kwargs):
-        booking = self.get_object()
+        with transaction.atomic():
+
+            booking = Booking.objects.select_for_update().get(pk=kwargs['pk'])
 
         if request.user != booking.tenant:
             return Response({'detail': 'Вы не можете отменить это бронирование (не ваш заказ)'}, status=403)
@@ -56,6 +55,7 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
             return Response({'detail': 'Бронирование нельзя отменить в день въезда или позже.'}, status=400)
 
         booking.status = 'cancelled'
+        booking.version += 1
         booking.save()
         return Response({'detail': 'Бронирование отменено.'}, status=200)
 
@@ -64,20 +64,21 @@ class BookingStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        try:
-            booking = Booking.objects.get(pk=pk)
-        except Booking.DoesNotExist:
-            return Response({'detail': 'Booking not found'}, status=404)
 
+        with transaction.atomic():
+            try:
+                booking = Booking.objects.select_for_update().get(pk=pk)
+            except Booking.DoesNotExist:
+                return Response({'detail': 'Booking not found'}, status=404)
 
-        if request.user != booking.listing.owner:
-            return Response({'detail': 'Недостаточно прав'}, status=403)
+            if request.user != booking.listing.owner:
+                return Response({'detail': 'Недостаточно прав'}, status=403)
 
-        status_new = request.data.get('status')
-        if status_new not in ['approved', 'declined']:
-            return Response({'detail': 'Некорректный статус'}, status=400)
+            status_new = request.data.get('status')
+            if status_new not in ['approved', 'declined']:
+                return Response({'detail': 'Некорректный статус'}, status=400)
 
-        # Обновляем статус
-        booking.status = status_new
-        booking.save()
-        return Response(BookingSerializer(booking).data)
+            booking.status = status_new
+            booking.save()
+
+            return Response(BookingSerializer(booking).data)

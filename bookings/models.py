@@ -36,6 +36,8 @@ class Booking(models.Model):
 
     cancel_deadline = models.DateField()
 
+    version = models.PositiveIntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

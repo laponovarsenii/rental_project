@@ -1,4 +1,6 @@
 from rest_framework import generics, permissions
+from rest_framework.pagination import PageNumberPagination
+
 from .models import Review
 from .serializers import ReviewSerializer
 
@@ -9,9 +11,15 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
             return True
         return obj.author == request.user
 
+class ReviewPagination(PageNumberPagination):
+    page_size_query_param = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 
 class ReviewListCreateView(generics.ListCreateAPIView):
     serializer_class = ReviewSerializer
+    pagination_class = ReviewPagination
 
     def get_permissions(self):
         if self.request.method == 'POST':

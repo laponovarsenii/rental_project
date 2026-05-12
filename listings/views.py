@@ -1,4 +1,6 @@
 from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Listing, ViewHistory
 from .serializers import ListingSerializer, ViewHistorySerializer
 from rest_framework.response import Response
@@ -36,7 +38,7 @@ class ListingListCreateView(generics.ListCreateAPIView):
 
 class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ListingSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsAuthenticated]
 
     def get_queryset(self):
         return Listing.objects.all()
