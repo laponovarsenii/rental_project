@@ -21,7 +21,11 @@ class BookingListCreateView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        user = self.request.user
+        if getattr(self, 'swagger_fake_view', False):
+            return Booking.objects.none()
+        user = getattr(self.request, 'user', None)
+        if not user or getattr(user, 'is_anonymous', True):
+            return Booking.objects.none()
         return (Booking.objects.filter(tenant=user) | Booking.objects.filter(listing__owner=user)).select_related(
             'listing', 'tenant').order_by('-created_at')
 
@@ -34,7 +38,11 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def get_queryset(self):
-        user = self.request.user
+        if getattr(self, 'swagger_fake_view', False):
+            return Booking.objects.none()
+        user = getattr(self.request, 'user', None)
+        if not user or getattr(user, 'is_anonymous', True):
+            return Booking.objects.none()
         return (Booking.objects.filter(tenant=user) | Booking.objects.filter(listing__owner=user)).select_related(
             'listing', 'tenant').order_by('-created_at')
 

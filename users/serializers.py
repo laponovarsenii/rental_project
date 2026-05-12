@@ -52,13 +52,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(username=username, email=email, password=password, **extra_fields)
         return user
 
-
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = User
-        fields = _intersect_fields(("id", "username", "email", "first_name", "last_name", "role", "date_joined"))
+        fields = _intersect_fields(
+            ("id", "username", "email", "first_name", "last_name", "role", "password", "date_joined"))
         read_only_fields = _intersect_fields(("id", "date_joined"))
 
     def update(self, instance, validated_data):
