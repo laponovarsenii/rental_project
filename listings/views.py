@@ -1,3 +1,75 @@
-from django.shortcuts import render
+from rest_framework import generics, permissions
+from .models import Listing, ViewHistory
+from .serializers import ListingSerializer, ViewHistorySerializer
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from listings.filters import ListingFilter
+from django.db.models import Count
 
-# Create your views here.
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.owner == request.user
+
+class ListingListCreateView(generics.ListCreateAPIView):
+    queryset = Listing.objects.all()
+    serializer_class = ListingSerializer
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    filterset_class = ListingFilter
+    search_fields = ('title', 'city', 'description')
+    ordering_fields = ('price', 'created_at', 'rooms')
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+    def get_queryset(self):
+        return Listing.objects.filter(is_active=True)
+
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ListingSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return Listing.objects.all()
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user.is_authenticated:
+            ViewHistory.objects.get_or_create(
+                user=request.user,
+                listing=instance
+            )
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class ViewHistoryListView(generics.ListAPIView):
+    serializer_class = ViewHistorySerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return ViewHistory.objects.filter(
+            user=self.request.user
+        ).order_by('-viewed_at')
+
+class PopularListView(generics.ListAPIView):
+    serializer_class = ListingSerializer
+
+    def get_queryset(self):
+        return Listing.objects.filter(
+            is_active=True
+        ).annotate(
+            views_count=Count('viewhistory')
+        ).order_by('-views_count', 'created_at')[:10]
