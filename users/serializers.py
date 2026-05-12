@@ -17,12 +17,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-
         fields = _intersect_fields(("id", "username", "email", "last_name", "role", "password"))
         read_only_fields = _intersect_fields(("id",))
 
-    def _generate_unique_username(self, base: str) -> str:
 
+    def _generate_unique_username(self, base: str) -> str:
         base = base or "user"
         username = base
         suffix = 0
@@ -36,17 +35,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         username = validated_data.pop("username", None)
         email = validated_data.get("email")
 
-
         if not username:
             if email:
                 base = email.split("@")[0]
             else:
-
-                raise serializers.ValidationError(
-                    {"non_field_errors": ["Username or email is required."]}
-                )
+                raise serializers.ValidationError({"non_field_errors": ["Username or email is required."]})
             username = self._generate_unique_username(base)
-
 
         extra_fields = {
             k: v
@@ -54,7 +48,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             if k not in ("email", "username")
             and k in _MODEL_FIELD_NAMES
         }
-
 
         user = User.objects.create_user(username=username, email=email, password=password, **extra_fields)
         return user
@@ -65,14 +58,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-
         fields = _intersect_fields(("id", "username", "email", "first_name", "last_name", "role", "date_joined"))
-        read_only_fields = _intersect_fields(("id", "email", "created_at"))
+        read_only_fields = _intersect_fields(("id", "date_joined"))
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
         for attr, value in validated_data.items():
-
             if attr in _MODEL_FIELD_NAMES:
                 setattr(instance, attr, value)
         if password:

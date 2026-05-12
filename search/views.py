@@ -11,9 +11,10 @@ from django.db.models import Count
 
 
 class SearchView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         keyword = request.query_params.get('q', '')
-
         if not keyword:
             return Response({'error': 'Введите поисковый запрос'}, status=400)
 
@@ -23,15 +24,14 @@ class SearchView(APIView):
             Q(description__icontains=keyword)
         ).select_related('owner')
 
-
         if request.user.is_authenticated:
-            SearchHistory.objects.get_or_create(
-                user=request.user,
-                keyword=keyword
-            )
+            SearchHistory.objects.create(user=request.user, keyword=keyword)
 
-        serializer = ListingSerializer(listings, many=True, context={'request': request})
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        page = paginator.paginate_queryset(listings, request)
+        serializer = ListingSerializer(page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
 
 class SearchHistoryListView(generics.ListAPIView):
@@ -39,9 +39,7 @@ class SearchHistoryListView(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return SearchHistory.objects.filter(
-            user=self.request.user
-        ).order_by('-searched_at')
+        return SearchHistory.objects.filter(user=self.request.user).order_by('-searched_at')
 
 
 class PopularSearchPagination(PageNumberPagination):
@@ -56,17 +54,11 @@ class PopularSearchView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        return SearchHistory.objects.values('keyword').annotate(
-            count=Count('id')
-        ).order_by('-count')
-
+        return SearchHistory.objects.values('keyword').annotate(count=Count('id')).order_by('-count')
 
     def list(self, request, *args, **kwargs):
-
         queryset = self.filter_queryset(self.get_queryset())
-
         page = self.paginate_queryset(queryset)
         if page is not None:
             return self.get_paginated_response(page)
-
         return Response(queryset)

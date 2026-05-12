@@ -1,6 +1,5 @@
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.permissions import IsAuthenticated
 from .models import Listing, ViewHistory
 from .serializers import ListingSerializer, ViewHistorySerializer
 from rest_framework.response import Response
@@ -32,13 +31,11 @@ class ListingListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Listing.objects.filter(is_active=True)
 
-
     def get_serializer_context(self):
         return {'request': self.request}
 
 class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ListingSerializer
-    # Allow anonymous GETs, but require owner for unsafe methods
     permission_classes = [IsOwnerOrReadOnly, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
@@ -74,6 +71,5 @@ class PopularListView(generics.ListAPIView):
         return Listing.objects.filter(
             is_active=True
         ).select_related('owner').annotate(
-
             views_count=Count('view_history')
         ).order_by('-views_count', 'created_at')[:10]

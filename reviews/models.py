@@ -32,4 +32,5 @@ class Review(models.Model):
         unique_together = ('listing', 'author')
 
     def __str__(self):
-        return f'{self.author.name} -> {self.listing.title} ({self.rating}★)'
+        author_name = getattr(self.author, 'username', str(self.author))
+        return f'{author_name} -> {self.listing.title} ({self.rating}★)'
