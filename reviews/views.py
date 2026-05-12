@@ -39,7 +39,7 @@ class ReviewListCreateView(generics.ListCreateAPIView):
 
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ReviewSerializer
-    permission_classes = (permissions.IsAuthenticated, IsAuthorOrReadOnly)
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_queryset(self):
         return Review.objects.select_related('listing', 'author')
