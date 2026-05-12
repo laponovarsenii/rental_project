@@ -66,7 +66,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
 
-        fields = _intersect_fields(("id", "username", "email", "last_name", "role", "password", "created_at"))
+        fields = _intersect_fields(("id", "username", "email", "first_name", "last_name", "role", "date_joined"))
         read_only_fields = _intersect_fields(("id", "email", "created_at"))
 
     def update(self, instance, validated_data):
