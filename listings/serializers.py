@@ -7,7 +7,7 @@ from users.serializers import UserSerializer
 class ListingSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
     owner_id = serializers.PrimaryKeyRelatedField(
-        source='owner_user',
+        source='owner',
         read_only=True
     )
     class Meta:
@@ -36,6 +36,7 @@ class ListingSerializer(serializers.ModelSerializer):
 
 class ViewHistorySerializer(serializers.ModelSerializer):
     listing = ListingSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = ViewHistory

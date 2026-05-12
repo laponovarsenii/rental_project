@@ -36,11 +36,8 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Booking.objects.filter(
-            tenant=user
-        ) | Booking.objects.filter(
-            listing__owner=user
-        )
+        return (Booking.objects.filter(tenant=user) | Booking.objects.filter(listing__owner=user)).select_related(
+            'listing', 'tenant').order_by('-created_at')
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -67,10 +64,9 @@ class BookingStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-
         with transaction.atomic():
             try:
-                booking = Booking.objects.select_for_update().get(pk=pk)
+                booking = Booking.objects.select_related('listing').select_for_update().get(pk=pk)
             except Booking.DoesNotExist:
                 return Response({'detail': 'Booking not found'}, status=404)
 

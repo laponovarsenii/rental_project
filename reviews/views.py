@@ -28,9 +28,10 @@ class ReviewListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         listing_id = self.request.query_params.get('listing_id')
+        queryset = Review.objects.select_related('listing', 'author')
         if listing_id:
-            return Review.objects.filter(listing_id=listing_id).order_by('-created_at')
-        return Review.objects.all().order_by('-created_at')
+            return queryset.filter(listing_id=listing_id).order_by('-created_at')
+        return queryset.order_by('-created_at')
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -41,7 +42,7 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated, IsAuthorOrReadOnly)
 
     def get_queryset(self):
-        return Review.objects.all()
+        return Review.objects.select_related('listing', 'author')
 
     def get_serializer_context(self):
         return {'request': self.request}

@@ -35,6 +35,23 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "The start date must be before the end date."
             )
+
+        listing = data.get('listing')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        overlapping = Booking.objects.filter(
+            listing=listing,
+            start_date__lt=end_date,
+            end_date__gt=start_date,
+            status__in=['pending', 'confirmed']
+        ).exists()
+
+        if overlapping:
+            raise serializers.ValidationError(
+                "This listing is already booked for these dates."
+            )
+
         return data
 
     def create(self, validated_data):

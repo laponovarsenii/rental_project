@@ -56,9 +56,10 @@ class PopularSearchView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        return SearchHistory.objects.select_related('user').values('keyword').annotate(
+        return SearchHistory.objects.values('keyword').annotate(
             count=Count('id')
         ).order_by('-count')
+
 
     def list(self, request, *args, **kwargs):
 
