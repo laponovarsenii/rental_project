@@ -12,7 +12,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         return obj.author == request.user
 
 class ReviewPagination(PageNumberPagination):
-    page_size_query_param = 10
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 

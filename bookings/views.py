@@ -23,7 +23,8 @@ class BookingListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Booking.objects.filter(tenant=user) | Booking.objects.filter(listing__owner=user).order_by('-created_at')
+        return (Booking.objects.filter(tenant=user) | Booking.objects.filter(listing__owner=user)).select_related(
+            'listing', 'tenant').order_by('-created_at')
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -46,19 +47,21 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         with transaction.atomic():
-
             booking = Booking.objects.select_for_update().get(pk=kwargs['pk'])
 
-        if request.user != booking.tenant:
-            return Response({'detail': 'Вы не можете отменить это бронирование (не ваш заказ)'}, status=403)
-        if date.today() >= booking.start_date:
-            return Response({'detail': 'Бронирование нельзя отменить в день въезда или позже.'}, status=400)
+            if request.user != booking.tenant:
+                return Response({'detail': 'Вы не можете отменить это бронирование (не ваш заказ)'}, status=403)
+            if date.today() >= booking.start_date:
+                return Response({'detail': 'Бронирование нельзя отменить в день въезда или позже.'}, status=400)
 
-        booking.status = 'cancelled'
-        booking.version += 1
-        booking.save()
+            booking.status = 'cancelled'
+            if Booking.objects.filter(pk=booking.pk, version=booking.version).exists():
+                booking.version += 1
+                booking.save()
+            else:
+                return Response({'detail': 'Бронирование было изменено'}, status=409)
+
         return Response({'detail': 'Бронирование отменено.'}, status=200)
-
 
 class BookingStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated]

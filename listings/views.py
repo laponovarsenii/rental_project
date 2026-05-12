@@ -41,7 +41,7 @@ class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly, IsAuthenticated]
 
     def get_queryset(self):
-        return Listing.objects.all()
+        return Listing.objects.select_related('owner')
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -72,6 +72,6 @@ class PopularListView(generics.ListAPIView):
     def get_queryset(self):
         return Listing.objects.filter(
             is_active=True
-        ).annotate(
+        ).select_related('owner').annotate(
             views_count=Count('viewhistory')
         ).order_by('-views_count', 'created_at')[:10]
