@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
 from .models import SearchHistory
-from .serializers import SearchHistorySerializer
+from .serializers import SearchHistorySerializer, KeywordCountSerializer
 from listings.models import Listing
 from listings.serializers import ListingSerializer
 from django.db.models import Count
@@ -49,7 +49,7 @@ class PopularSearchPagination(PageNumberPagination):
 
 
 class PopularSearchView(generics.ListAPIView):
-    serializer_class = SearchHistorySerializer
+    serializer_class = KeywordCountSerializer
     pagination_class = PopularSearchPagination
     permission_classes = [permissions.AllowAny]
 

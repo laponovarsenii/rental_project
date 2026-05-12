@@ -14,3 +14,10 @@ class SearchHistorySerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         validated_data['user'] = request.user
         return super().create(validated_data)
+
+
+
+
+class KeywordCountSerializer(serializers.Serializer):
+    keyword = serializers.CharField()
+    count = serializers.IntegerField()
