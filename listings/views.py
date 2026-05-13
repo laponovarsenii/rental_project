@@ -15,6 +15,12 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
         return obj.owner == request.user
 
+
+class ListingListView(generics.ListAPIView):
+    queryset = Listing.objects.all()
+    serializer_class = ListingSerializer
+
+
 class ListingListCreateView(generics.ListCreateAPIView):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer

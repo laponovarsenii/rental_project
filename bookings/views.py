@@ -54,16 +54,16 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
             try:
                 booking = Booking.objects.select_for_update().get(pk=kwargs['pk'])
             except Booking.DoesNotExist:
-                return Response({'detail': 'Бронирование не найдено'}, status=404)
+                return Response({'detail': 'Reservation not found'}, status=404)
 
             if request.user != booking.tenant:
-                return Response({'detail': 'Вы не можете отменить это бронирование (не ваш заказ)'}, status=403)
+                return Response({'detail': 'You cannot cancel this reservation (not your order)'}, status=403)
 
             today = timezone.now().date()
             if booking.cancel_deadline and today > booking.cancel_deadline:
-                return Response({'detail': 'Срок отмены истёк, отмена невозможна.'}, status=400)
+                return Response({'detail': 'The cancellation period has expired, cancellation is not possible.'}, status=400)
             if not booking.cancel_deadline and today >= booking.start_date:
-                return Response({'detail': 'Бронирование нельзя отменить в день въезда или позже.'}, status=400)
+                return Response({'detail': 'Reservations cannot be cancelled on or after the day of arrival.'}, status=400)
 
             old_version = booking.version
             rows = Booking.objects.filter(pk=booking.pk, version=old_version).update(
@@ -71,9 +71,9 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                 version=old_version + 1
             )
             if rows != 1:
-                return Response({'detail': 'Бронирование было изменено'}, status=409)
+                return Response({'detail': 'The reservation has been changed'}, status=409)
 
-        return Response({'detail': 'Бронирование отменено.'}, status=200)
+        return Response({'detail': 'Reservation cancelled.'}, status=200)
 
 
 class BookingStatusUpdateView(APIView):
@@ -87,7 +87,7 @@ class BookingStatusUpdateView(APIView):
                 return Response({'detail': 'Booking not found'}, status=404)
 
             if request.user != booking.listing.owner:
-                return Response({'detail': 'Недостаточно прав'}, status=403)
+                return Response({'detail': 'Insufficient rights'}, status=403)
 
             status_new = request.data.get('status')
             mapping = {
@@ -99,7 +99,7 @@ class BookingStatusUpdateView(APIView):
 
             mapped = mapping.get(status_new)
             if mapped is None:
-                return Response({'detail': 'Некорректный статус'}, status=400)
+                return Response({'detail': 'Incorrect status'}, status=400)
 
             booking.status = mapped
             booking.save()

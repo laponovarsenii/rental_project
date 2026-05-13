@@ -1,9 +1,9 @@
 from rest_framework import serializers
-
 from listings.models import Listing
 from .models import Booking
 from listings.serializers import ListingSerializer
 from users.serializers import UserSerializer
+import datetime
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -16,6 +16,9 @@ class BookingSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    # Правильное имя поля и writable DateField
+    cancel_deadline = serializers.DateField(required=False, allow_null=True)
+
     class Meta:
         model = Booking
         fields = (
@@ -25,8 +28,9 @@ class BookingSerializer(serializers.ModelSerializer):
             'tenant',
             'start_date',
             'end_date',
+            'cancel_deadline',
             'status',
-            'created_at'
+            'created_at',
         )
         read_only_fields = ('id', 'tenant', 'status', 'created_at')
 
@@ -59,4 +63,9 @@ class BookingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['tenant'] = request.user
+
+        # Если cancel_deadline не передали, ставим дефолт — за 1 день до start_date
+        if validated_data.get('cancel_deadline') is None and validated_data.get('start_date') is not None:
+            validated_data['cancel_deadline'] = validated_data['start_date'] - datetime.timedelta(days=1)
+
         return super().create(validated_data)
