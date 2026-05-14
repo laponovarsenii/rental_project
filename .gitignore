@@ -385,4 +385,66 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Python virtualenvs
+.venv/
+venv/
+venv*/
+.Python
+
+# Django / project files
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+staticfiles/
+*.log
+
+# Env files (secrets)
+.env
+.env.*
+.env.docker
+
+# Docker local overrides, sync, volumes
+docker-compose.override.yml
+docker-sync.yml
+postgres_data/
+# if you store DB data in directory, ignore it:
+postgres_data/*
+
+# IDEs / editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Test / coverage
+.pytest_cache/
+coverage/
+htmlcov/
+
+# Mypy / caches
+.mypy_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.pem
+*.key
+*.tgz
+
 # End of https://www.toptal.com/developers/gitignore/api/pycharm,python,django,dotenv,jenv
