@@ -17,15 +17,14 @@ done
 echo "Database is up - running migrations"
 python manage.py migrate --noinput
 
-# Собираем статику (если настроено STATIC_ROOT)
+
 python manage.py collectstatic --noinput || true
 
-# Создаём суперпользователя, если заданы переменные — выполняем безопасный inline Python
+
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ]; then
   python - <<'PY'
 import os
-# Указываем модуль настроек перед django.setup()
-# Замените 'rental_project.settings' на ваш модуль настроек, если он отличается.
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rental_project.settings")
 import django
 django.setup()

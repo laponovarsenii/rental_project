@@ -6,7 +6,7 @@ services:
     image: postgres:15-alpine
     env_file:
       - .env.docker
-    # Переменные будут подхвачены из .env.docker; не используем ${} подстановки здесь
+
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     healthcheck:
@@ -15,7 +15,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432" # опционально, для доступа с хоста
+      - "5432:5432"
 
   web:
     build: .
