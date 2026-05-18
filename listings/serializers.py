@@ -36,7 +36,7 @@ class ListingSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def get_views_count(self, obj):
-        return obj.views_history.count()
+        return obj.view_history.count()
 
 
 

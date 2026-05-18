@@ -79,4 +79,6 @@ class ViewHistory(models.Model):
         related_name='viewed_listings'
     )
 
+    session_key = models.CharField(max_length=40, null=True, blank=True)
+
     viewed_at = models.DateTimeField(auto_now_add=True)
