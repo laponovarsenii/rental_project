@@ -52,12 +52,21 @@ class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.is_authenticated:
-            ViewHistory.objects.get_or_create(
-                user=request.user,
-                listing=instance
-            )
-        serializer = self.get_serializer(instance)
+
+        user = request.user if request.user.is_authenticated else None
+
+        session_key = request.session.session_key
+        if not session_key:
+            request.session.create()
+            session_key = request.session.session_key
+
+        if user is not None:
+            ViewHistory.objects.get_or_create(user=user, listing=instance)
+
+        else:
+            ViewHistory.objects.get_or_create(user=None, listing=instance, session_key=session_key)
+
+        serializer = ListingSerializer(instance)
         return Response(serializer.data)
 
 

@@ -53,6 +53,8 @@ class Listing(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    session_key = models.CharField(max_length=40, blank=True, null=True)
+
 
     class Meta:
         ordering = ['-created_at']

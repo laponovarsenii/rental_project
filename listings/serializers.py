@@ -8,8 +8,9 @@ class ListingSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
     owner_id = serializers.PrimaryKeyRelatedField(
         source='owner',
-        read_only=True
-    )
+        read_only=True)
+    views_count =  serializers.SerializerMethodField()
+
     class Meta:
         model = Listing
         fields = (
@@ -24,7 +25,8 @@ class ListingSerializer(serializers.ModelSerializer):
             'rooms',
             'housing_type',
             'is_active',
-            'created_at'
+            'created_at',
+            'views_count',
         )
         read_only_fields = ('id', 'owner', 'created_at')
 
@@ -32,6 +34,10 @@ class ListingSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         validated_data['owner'] = request.user
         return super().create(validated_data)
+
+    def get_views_count(self, obj):
+        return obj.views_history.count()
+
 
 
 class ViewHistorySerializer(serializers.ModelSerializer):
