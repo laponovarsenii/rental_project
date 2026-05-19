@@ -16,7 +16,7 @@ class BookingSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    # Правильное имя поля и writable DateField
+
     cancel_deadline = serializers.DateField(required=False, allow_null=True)
 
     class Meta:

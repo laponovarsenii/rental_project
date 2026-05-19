@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/reviews/', include('reviews.urls')),
     path('api/search/', include('search.urls')),
     path('api/chat/', include('chat.urls')),
+    path('api/', include('favorites.urls')),
 ]
 
 
